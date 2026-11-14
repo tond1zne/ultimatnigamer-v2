@@ -1,0 +1,99 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --ink: #000;
+  --paper: #fff;
+}
+
+html { background: var(--paper); color: var(--ink); scroll-behavior: smooth; }
+body { font-family: var(--font-body), system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+::selection { background: var(--ink); color: var(--paper); }
+:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; border-radius: 4px; }
+
+@layer components {
+  /* Komiksový panel: rovný rám, bez stínu. Důležité panely mají dvojitý rám. */
+  .panel { position: relative; border: 3px solid var(--ink); background: var(--paper); }
+  .panel-frame { box-shadow: 0 0 0 4px var(--paper), 0 0 0 7px var(--ink); }
+  .panel-ink { background: var(--ink); color: var(--paper); }
+  .panel-dots {
+    background-image: radial-gradient(var(--ink) 1.4px, transparent 1.6px);
+    background-size: 10px 10px;
+  }
+  .panel-hatch {
+    background-image: repeating-linear-gradient(135deg, var(--ink) 0 2px, transparent 2px 9px);
+  }
+  .dots-fade {
+    -webkit-mask-image: linear-gradient(120deg, #000 0%, transparent 70%);
+    mask-image: linear-gradient(120deg, #000 0%, transparent 70%);
+  }
+
+  .font-num { font-family: var(--font-display); font-variant-numeric: tabular-nums; }
+
+  /* Tlačítko jako klávesa: tlačí se dolů, ne do strany. */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+    font-family: var(--font-display); font-size: 1.05rem; line-height: 1;
+    padding: .8rem 1.25rem .75rem; border: 3px solid var(--ink); border-radius: .9rem;
+    background: var(--paper); color: var(--ink); box-shadow: 0 5px 0 var(--ink);
+    transition: transform .08s ease, box-shadow .08s ease; cursor: pointer; text-align: center;
+  }
+  .btn:hover { transform: translateY(2px); box-shadow: 0 3px 0 var(--ink); }
+  .btn:active { transform: translateY(5px); box-shadow: 0 0 0 var(--ink); }
+  .btn:disabled { opacity: .45; pointer-events: none; }
+  .btn-ink { background: var(--ink); color: var(--paper); box-shadow: 0 5px 0 #666; }
+  .btn-ink:hover { box-shadow: 0 3px 0 #666; }
+  .btn-sm { font-size: .9rem; padding: .55rem .9rem .5rem; box-shadow: 0 4px 0 var(--ink); border-radius: .7rem; }
+
+  .tag {
+    display: inline-flex; align-items: center; gap: .35rem; border: 2px solid var(--ink);
+    border-radius: .45rem; padding: .1rem .5rem; font-size: .8rem; font-weight: 700; line-height: 1.4; background: var(--paper);
+  }
+  .tag-ink { background: var(--ink); color: var(--paper); }
+
+  .field {
+    width: 100%; border: 3px solid var(--ink); border-radius: .75rem; background: var(--paper);
+    padding: .65rem .85rem; font: inherit; color: var(--ink);
+  }
+  .field::placeholder { color: #8a8a8a; }
+  .label { display: block; margin-bottom: .3rem; font-weight: 700; font-size: .9rem; }
+
+  /* Řečnická bublina s ocáskem: používá se pro body. */
+  .bubble {
+    position: relative; display: inline-flex; flex-direction: column; align-items: center; justify-content: center;
+    background: var(--paper); color: var(--ink); border: 3px solid var(--ink);
+    border-radius: 50% 48% 52% 46% / 56% 50% 50% 46%; padding: .55rem 1rem .5rem; line-height: 1;
+  }
+  .bubble::after {
+    content: ""; position: absolute; left: 22%; bottom: -15px; width: 20px; height: 20px;
+    background: var(--paper); border-right: 3px solid var(--ink); border-bottom: 3px solid var(--ink);
+    transform: skewX(-24deg) rotate(38deg);
+  }
+  .bubble-ink { background: var(--ink); color: var(--paper); }
+  .bubble-ink::after { background: var(--ink); }
+}
+
+/* Jediný výrazný pohyb: panely v hero naskočí jako rány v komiksu. */
+@keyframes slam {
+  0% { opacity: 0; transform: scale(1.08) rotate(-1.2deg); }
+  60% { opacity: 1; transform: scale(.985) rotate(.2deg); }
+  100% { opacity: 1; transform: none; }
+}
+.slam { opacity: 0; animation: slam .45s cubic-bezier(.2, .9, .3, 1) forwards; animation-delay: calc(var(--d, 0) * 120ms); }
+
+@keyframes marquee { to { transform: translateX(-50%); } }
+.marquee-track { display: flex; width: max-content; animation: marquee 38s linear infinite; }
+.marquee:hover .marquee-track { animation-play-state: paused; }
+
+@keyframes tick { 0% { transform: translateY(-35%); opacity: 0; } 100% { transform: none; opacity: 1; } }
+.tick { display: inline-block; animation: tick .25s ease-out; }
+
+@keyframes wiggle { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg); } }
+.wiggle:hover { animation: wiggle .5s ease-in-out; }
+
+@media (prefers-reduced-motion: reduce) {
+  .slam { animation: none; opacity: 1; }
+  .marquee-track, .tick, .wiggle:hover { animation: none; }
+  html { scroll-behavior: auto; }
+}

@@ -1,0 +1,122 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum Category {
+  GAME
+  IRL
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+  INSANE
+}
+
+enum SubmissionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum WeekStatus {
+  PENDING
+  ACTIVE
+  CLOSED
+}
+
+model User {
+  id              String       @id @default(cuid())
+  name            String
+  email           String       @unique
+  passwordHash    String
+  role            Role         @default(USER)
+  emailVerifiedAt DateTime?
+  createdAt       DateTime     @default(now())
+  submissions     Submission[]
+  tokens          EmailToken[]
+}
+
+/// Ukládá se jen SHA-256 hash tokenu, nikdy token samotný.
+model EmailToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model AppSettings {
+  id                      String  @id @default("singleton")
+  notifyAdminOnSubmission Boolean @default(true)
+}
+
+model RateLimit {
+  key     String   @id
+  count   Int
+  resetAt DateTime
+
+  @@index([resetAt])
+}
+
+model Week {
+  id          String       @id @default(cuid())
+  number      Int          @unique
+  status      WeekStatus   @default(PENDING)
+  startsAt    DateTime?
+  endsAt      DateTime?
+  closedAt    DateTime?
+  submissions Submission[]
+
+  @@index([status])
+}
+
+model Challenge {
+  id          String       @id @default(cuid())
+  title       String
+  description String
+  category    Category
+  difficulty  Difficulty   @default(MEDIUM)
+  points      Int
+  isArchived  Boolean      @default(false)
+  createdAt   DateTime     @default(now())
+  submissions Submission[]
+}
+
+model Submission {
+  id            String           @id @default(cuid())
+  userId        String
+  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  challengeId   String
+  challenge     Challenge        @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  weekId        String
+  week          Week             @relation(fields: [weekId], references: [id], onDelete: Cascade)
+  proofUrl      String
+  note          String?
+  status        SubmissionStatus @default(PENDING)
+  pointsAwarded Int?
+  reviewNote    String?
+  reviewedAt    DateTime?
+  createdAt     DateTime         @default(now())
+
+  @@unique([userId, challengeId, weekId])
+  @@index([weekId, status])
+  @@index([userId])
+  @@index([challengeId, status])
+}
